@@ -7,49 +7,46 @@ import (
 
 type WorkFn func() string
 
-type Worker struct {
-	id       int
+type SchuylerSister struct {
+	name     string
 	incoming <-chan WorkFn
 	log      chan<- string
 	done     chan<- struct{}
 }
 
-func (w *Worker) Work() {
-	w.Log("coming online...")
+func (w *SchuylerSister) Work() {
 	for {
 		work, ok := <-w.incoming
 		if !ok {
 			break
 		}
 		w.Log(work())
-		w.Log("resting for a little now...")
 		time.Sleep(100 * time.Millisecond)
 	}
-	w.Log("all done!")
 	w.done <- struct{}{}
 }
 
-func (w *Worker) Log(log string) {
-	w.log <- fmt.Sprintf("Worker %v: %s", w.id, log)
+func (w *SchuylerSister) Log(log string) {
+	w.log <- fmt.Sprintf("%s: %s", w.name, log)
 }
 
-func NewWorker(id int, incoming <-chan WorkFn, log chan<- string, done chan<- struct{}) *Worker {
-	return &Worker{
-		id:       id,
+func NewSchuylerSister(name string, incoming <-chan WorkFn, log chan<- string, done chan<- struct{}) *SchuylerSister {
+	return &SchuylerSister{
+		name:     name,
 		incoming: incoming,
 		log:      log,
 		done:     done,
 	}
 }
 
-type WorkerPool struct {
-	workers  []*Worker
+type SchuylerSisters struct {
+	workers  []*SchuylerSister
 	outgoing chan<- WorkFn
 	done     <-chan struct{}
 	log      <-chan string
 }
 
-func (wp *WorkerPool) DoWork(fns []WorkFn) {
+func (wp *SchuylerSisters) DoWork(fns []WorkFn) {
 	go wp.Log()
 	for _, w := range wp.workers {
 		go w.Work()
@@ -65,7 +62,7 @@ func (wp *WorkerPool) DoWork(fns []WorkFn) {
 	}
 }
 
-func (wp *WorkerPool) Log() {
+func (wp *SchuylerSisters) Log() {
 	for {
 		log, ok := <-wp.log
 		if !ok {
@@ -75,15 +72,16 @@ func (wp *WorkerPool) Log() {
 	}
 }
 
-func NewWorkerPool(count int) *WorkerPool {
+func NewSchuylerSisters() *SchuylerSisters {
 	workCh := make(chan WorkFn)
 	logCh := make(chan string)
 	doneCh := make(chan struct{})
-	workers := make([]*Worker, count)
-	for i := 0; i < len(workers); i++ {
-		workers[i] = NewWorker(i, workCh, logCh, doneCh)
+	sisters := []string{"Angelica", "Peggy", "Eliza"}
+	workers := make([]*SchuylerSister, len(sisters))
+	for i, name := range sisters {
+		workers[i] = NewSchuylerSister(name, workCh, logCh, doneCh)
 	}
-	return &WorkerPool{
+	return &SchuylerSisters{
 		workers:  workers,
 		outgoing: workCh,
 		log:      logCh,
@@ -93,12 +91,12 @@ func NewWorkerPool(count int) *WorkerPool {
 
 func main() {
 	workFn := func() string {
-		return "All work and no play makes Jack a dull boy"
+		return "Work! Work!"
 	}
-	work := make([]WorkFn, 100)
+	work := make([]WorkFn, 20)
 	for i := 0; i < len(work); i++ {
 		work[i] = workFn
 	}
-	wp := NewWorkerPool(5)
+	wp := NewSchuylerSisters()
 	wp.DoWork(work)
 }
