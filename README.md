@@ -30,7 +30,7 @@ func main() {
 
 ## Usage With Results (`func() T`)
 
-_Note_: The results channel will be closed when the pool is stopped, so you have to stop the pool *before* waiting for
+**Note**: The results channel will be closed when the pool is stopped, so you have to stop the pool *before* waiting for
 the results to finish.
 
 ```go
