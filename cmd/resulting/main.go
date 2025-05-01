@@ -7,10 +7,10 @@ import (
 )
 
 func main() {
-	resultsCh, rp := gowork.NewResultingPool[string]()
-	rp.Start()
-	done := make(chan struct{})
+	resultsCh, pool := gowork.NewResultingPool[string]()
+	pool.Start()
 
+	done := make(chan struct{})
 	go func() {
 		defer close(done)
 		for result := range resultsCh {
@@ -19,9 +19,9 @@ func main() {
 	}()
 
 	for i := range 20 {
-		rp.Submit(func() string { return fmt.Sprintf("Job %d ran", i) })
+		pool.Submit(func() string { return fmt.Sprintf("Job %d ran", i) })
 	}
 
-	rp.Stop()
+	pool.Stop()
 	<-done
 }

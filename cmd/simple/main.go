@@ -9,11 +9,12 @@ import (
 func main() {
 	pool := gowork.NewPool()
 	pool.Start()
-	defer pool.Stop()
 
-	for i := range 100 {
+	for i := range 20 {
 		pool.Submit(func() {
 			fmt.Printf("Job %d is running...\n", i)
 		})
 	}
+
+	pool.Stop()
 }
